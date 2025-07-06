@@ -2,6 +2,10 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const axios = require('axios');
 
+// إضافة express لسيرفر بسيط
+const express = require('express');
+const app = express();
+
 const client = new Client({ authStrategy: new LocalAuth() });
 
 client.on('qr', qr => {
@@ -73,3 +77,12 @@ client.on('message', async msg => {
 });
 
 client.initialize();
+
+// سيرفر بسيط على المنفذ المطلوب من Render
+const PORT = process.env.PORT || 3000;
+app.get('/', (req, res) => {
+    res.send('Whatsapp bot is running!');
+});
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`HTTP server listening on port ${PORT}`);
+});
