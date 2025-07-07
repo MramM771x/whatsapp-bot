@@ -1,12 +1,16 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const axios = require('axios');
-
-// إضافة express لسيرفر بسيط
 const express = require('express');
 const app = express();
 
-const client = new Client({ authStrategy: new LocalAuth() });
+// خيارات Puppeteer ضرورية لتشغيل البوت في Render أو أي استضافة سحابية
+const client = new Client({
+    authStrategy: new LocalAuth(),
+    puppeteer: {
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+    }
+});
 
 client.on('qr', qr => {
     qrcode.generate(qr, { small: true });
@@ -44,6 +48,7 @@ client.on('message', async msg => {
             }
 
             // إذا كان عضو عادي، أرسل الرسالة إلى بايثون للفحص
+            // يجب تغيير localhost إلى رابط خدمة البايثون على Render إذا كنت تستخدم استضافة منفصلة
             const response = await axios.post('http://localhost:5000/check', {
                 message: msg.body,
                 type: msg.type,

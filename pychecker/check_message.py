@@ -1,11 +1,12 @@
 from flask import Flask, request, jsonify
 import re
+import os
 
 app = Flask(__name__)
 
-# القوائم كما في السابق...
+# قوائم الكلمات والروابط والعبارات الممنوعة والمسموح بها
 banned_keywords = [
-    "خاص", "اعلان", "إعلان", "اعلانات", "إعلانات","خدمات طلابية", "تواصل خاص", "للتواصل خاص"
+    "خاص", "اعلان", "إعلان", "اعلانات", "إعلانات", "خدمات طلابية", "تواصل خاص", "للتواصل خاص"
 ]
 banned_links = [
     "wa.me", "whatsapp.com", "chat.whatsapp.com"
@@ -41,7 +42,7 @@ def contains_banned_content(message, msg_type):
     # روابط واتساب
     if any(link in msg for link in banned_links):
         return True
-    # أي رابط
+    # أي رابط (غير مسموح)
     if re.search(r'https?://[^\s]+', msg):
         return True
     # إعلان (كلمة واحدة فقط)
@@ -56,8 +57,9 @@ def contains_banned_content(message, msg_type):
     # أرقام بصيغة 00966 أو 0091 أو 0020 أو 00971 أيضاً
     if re.search(r'(00966|0091|0020|966|91|967|971|00971)\d{7,}', msg):
         return True
+    # منشن شخص
     if re.search(r'@\w+', message):
-     return True
+        return True
     return False
 
 @app.route("/check", methods=["POST"])
@@ -66,7 +68,7 @@ def check():
     message = data.get("message", "")
     msg_type = data.get("type", "")
 
-    # السماح بالرسائل التي تحتوي على رابط في whitelist وعدم اعتبارها مخالفة
+    # السماح بالرسائل التي تحتوي على رابط في whitelist
     if is_whitelisted(message):
         return jsonify({"action": "ok"})
 
@@ -76,4 +78,6 @@ def check():
         return jsonify({"action": "ok"})
 
 if __name__ == "__main__":
-    app.run(port=5000)
+    # دعم متغير البيئة PORT لكي تعمل الخدمة على Render أو أي استضافة سحابية
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
